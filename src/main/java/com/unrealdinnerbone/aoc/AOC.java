@@ -2,23 +2,25 @@ package com.unrealdinnerbone.aoc;
 
 import com.google.common.base.Stopwatch;
 import com.unrealdinnerbone.aoc.api.IDay;
-import com.unrealdinnerbone.unreallib.OptionalUtils;
-import com.unrealdinnerbone.unreallib.file.FileHelper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class AOC
 {
-    public static File getFileForPuzzle(String day, String name) {
-        return FileHelper.getOrCreateFolder(FileHelper.getOrCreateFolder("files", "day" + day), name);
+    public static Path getFileForPuzzle(String day, String name) {
+        return Path.of("files").resolve("day" + day).resolve(name);
     }
 
     public static void main(String[] args) {
@@ -52,13 +54,13 @@ public class AOC
         try {
             Class<? extends IDay> dayClass = (Class<? extends IDay>) Class.forName(AOC.class.getCanonicalName().replaceAll("AOC", "day" + day + ".AOCDay" + day + "Puzzle0" + puzzle));
             log.info("Trying to run {}", dayClass.getName());
-            List<String> values = FileHelper.readAllLinesinFile(AOC.getFileForPuzzle(day, "input.txt"));
+            List<String> values = Files.lines(AOC.getFileForPuzzle(day, "input.txt")).collect(Collectors.toList());
             IDay theDay = dayClass.getConstructor().newInstance();
             Stopwatch stopwatch = Stopwatch.createStarted();
             Optional<String> answer = theDay.run(values);
             stopwatch.stop();
             answer.ifPresentOrElse(s -> log.info("Answer for Day: {} Puzzle: {} is {} in {}ms", day, puzzle, s, stopwatch.elapsed(TimeUnit.MILLISECONDS)), () -> log.info("No answer given for Day: {} Puzzle: {} in {}ms", day, puzzle, stopwatch.elapsed(TimeUnit.MILLISECONDS)));
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | IOException e) {
             log.error("Error ", e);
         } catch (ClassNotFoundException e) {
             log.info("Skipping {}/{}", day, puzzle);
